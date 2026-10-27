@@ -1,0 +1,90 @@
+**Project Title:** Robotics Equipment Maintenance Log | **Student:** Ayushi Srivastava | **Registration No.:** 2502190039 | **Branch:** Mechanical and Smart Manufacturing | **Course:** CS-1281 – Python Programming Lab | **Semester:** B.Tech 3rd Semester | **Institution:** VSSUT, Burla | **Work Order 09:** The Data Layer. A Python-based project that validates maintenance records, tracks equipment failures and downtime, and generates dated reports with detailed error logging.
+Robotics Equipment Maintenance Log is a Python-based project that validates maintenance records, tracks equipment failures and downtime, and generates dated reports with detailed error logging. Developed for CS-1281 Python Programming Lab at VSSUT Burla.
+
+# ============================================================
+# Project: Robotics Equipment Maintenance Log
+# Student: Ayushi Srivastava
+# Registration No.: 2502190039
+# Course: CS-1281 - Python Programming Lab
+# Work Order 09 - The Data Layer
+# ============================================================
+
+import os
+import datetime
+from datalayer import load, summarise
+
+
+def main():
+    # Locate the main project directory
+    project_root = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )
+
+    data_path = os.path.join(
+        project_root, "data", "sample.txt"
+    )
+
+    reports_dir = os.path.join(
+        project_root, "reports"
+    )
+
+    os.makedirs(reports_dir, exist_ok=True)
+
+    # Load and validate input records
+    try:
+        records, problems = load(data_path)
+    except FileNotFoundError:
+        print(f"ERROR: Input file not found: {data_path}")
+        return
+
+    # Summarise valid records
+    summary = summarise(records)
+
+    # Create a unique, dated report filename
+    stamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    report_path = os.path.join(
+        reports_dir, f"report_{stamp}.txt"
+    )
+
+    # Write the report
+    with open(report_path, "w", encoding="utf-8") as file:
+        file.write("ROBOTICS EQUIPMENT MAINTENANCE REPORT\n")
+        file.write("=" * 60 + "\n")
+        file.write(
+            f"Generated: {datetime.datetime.now()}\n"
+        )
+        file.write(f"Source file: {data_path}\n")
+        file.write(f"Valid records: {len(records)}\n")
+        file.write(f"Rejected records: {len(problems)}\n\n")
+
+        file.write(
+            f"{'EQUIPMENT':<22}{'COUNT':>8}"
+            f"{'DOWNTIME (H)':>16}\n"
+        )
+        file.write("-" * 46 + "\n")
+
+        for name, values in sorted(summary.items()):
+            file.write(
+                f"{name:<22}"
+                f"{values['count']:>8}"
+                f"{values['downtime_hours']:>16.2f}\n"
+            )
+
+        file.write("\nPROBLEMS / REJECTED RECORDS\n")
+        file.write("-" * 60 + "\n")
+
+        if problems:
+            for line_no, reason, raw_text in problems:
+                file.write(f"Line {line_no}: {reason}\n")
+                file.write(f"  Raw data: {raw_text}\n")
+        else:
+            file.write("No rejected records.\n")
+
+    print("Report generated successfully!")
+    print(f"Report location: {report_path}")
+    print(f"Valid records: {len(records)}")
+    print(f"Rejected records: {len(problems)}")
+
+
+if __name__ == "__main__":
+    main()
